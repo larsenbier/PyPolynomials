@@ -165,7 +165,7 @@ first term pre-modding: 1 + 2x^3
 second term pre-modding: 4 + x + 3x^2 + x^3
 polynomial post-modding: [1 - 2.0x]x + [1.0]x^2
 ```
-For any polynomial $f(x) \in F[x]$, if we consider $[f(x)]$ has an inverse in the field $F[x]/p(x)$, where $[f(x)]$ is the equivalence class of $f(x) \mod p(x)$. Since PyPoly considers any polynomial over $F[x]$ to be an an element of $F[x]/p(x)$ (after taking its remainder when divided by $p(x)$ ), we can take its inverse:
+For any polynomial $f(x) \in F[x]$, if we consider the equivalence class of $f(x)$, $[f(x)]$, then it has an inverse in the field $F[x]/p(x)$. Since PyPoly considers any polynomial over $F[x]$ to be an an element of $F[x]/p(x)$ (after taking its remainder when divided by $p(x)$ ), we can take its inverse:
 ```python
 a = Polynomial({0:1, 1:1}, R = p.R)
 a_inv = QMod_p.inv(a)
