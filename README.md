@@ -4,10 +4,7 @@ PyPolynomial is a project that implements three ideas from algebra:
 * Fields
 * Polynomials
 
-To use PyPolynomial:
-```python
-import pypolynomial
-```
+To use PyPolynomial, you must include the file or the code in your project directory. As of right now, this project is not part of the python package index, and is mostly meant as a fun showcase of some algebra.
 PyPolynomial has no dependencies, but is compatible with objects from other libraries if you define the ```Ring``` member functions properly.
 ## Rings
 Rings are collection of the form $(R, +, \bullet)$, where:
