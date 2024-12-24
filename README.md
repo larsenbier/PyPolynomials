@@ -8,6 +8,7 @@ To use PyPolynomial:
 ```python
 import pypolynomial
 ```
+PyPolynomial has no dependencies, but is compatible with objects from other libraries if you define the ```Ring``` member functions properly.
 ## Rings
 Rings are collection of the form $(R, +, \bullet)$, where:
 * $R$ is a set,
@@ -41,7 +42,7 @@ def contains(a):
     return False
 Z = Ring(add, sub, mult, contains, zero = 0, real_subset = True, name = "Z")
 ```
-This framework gives you the flexibility to create many different kinds of rings by simply defining their structure. The benefit is that any ring you define is automatically compatible with the ```Polynomial``` class.
+This framework gives you the flexibility to create many different kinds of rings by simply defining their structure. The benefit is that any ring you define is automatically compatible with the ```Polynomial``` class, assuming its member functions satisfy the ring axioms.
 
 PyPolynomial comes with the premade rings including $\mathbb{Z, Q}$ and $\mathbb{C}$, where $\mathbb{C}$ is the field of Gaussian Rationals. $\mathbb{R}$ is currently not implemented since I did not code support for dealing with infinite-precision real numbers in this first version.
 
@@ -114,13 +115,68 @@ v(x) = 2x + 2x^2
 quotient of u(x)/v(x): -1.0 + x + x^2 - x^3
 remainder of u(x)/v(x): 0.5 + 3.0x
 ```
-Where division is defined, we can also take the greatest common divisor of two polynomials, denoted $\gcd(f(x), g(x))$:
+Where division is defined, we can also take the greatest common divisor of two polynomials, denoted $\gcd(f(x), g(x))$. PyPolynomial adopts the convention that $\gcd(f(x), g(x))$ is the monic polynomial of highest degree that divides both $f(x)$ and $g(x)$.
 ```python
 print(gcd(u,v))
 ```
 ```plaintext
 1.0
 ```
-
-
-
+## Extension Fields
+PyPolynomial was designed to deal with relatively abstract polynomials. Given a field $F$ and an irreducible polynomial $p(x)$, we can construct the quotient ring $F[x]/p(x)$ using the PyPolynomial function ```poly_quotient_ring```.
+```python
+p = Polynomial({0:1, 2:1}, R = Q)
+QMod_p = poly_quotient_ring(Q)
+print(QMod_p.name)
+```
+```plaintext
+'Q/(1 + x^2)'
+```
+This represents the field $\mathbb{Q}$ algebraically extended by $i$, the root of $1+x^2$ (since $-i$ is in this extension, we only consider the first root).
+We can define polynomials in this new field. The coefficients are any of the elements of $\mathbb{Q}/(1+x^2)$, which are exactly the equivalence classes of all the polynomials in $\mathbb{Q}[x]$ with degree strictly less than $1+x^2$. Here is an example:
+```python
+f_coeffs = {
+            1 : Polynomial({0:5}, R = p.R),
+            2 : Polynomial({0:1, 1:1.5}, R = p.R),
+            5 : Polynomial({1:0.25}, R = p.R)
+            }
+f = Polynomial(f_coeffs, R = QMod_p)
+print("f(x) =", f)
+```
+```plaintext
+f(x) = [5]x + [1 + 1.5x]x^2 + [0.25x]x^5
+```
+Similarly to the modular arithmetic in the integers, if we initialize a polynomial in a polynomial quotient ring using coefficients with degree >= $p(x)$, we simply divide them by $p(x)$ and use their remainder, which is in the same equivalence class. This convention holds for all operations as well:
+```python
+g_coeffs = {
+            1 : Polynomial({0:1, 3:2}, R = p.R),
+            2 : Polynomial({0:4, 1:1, 2:3, 3:1}, R = p.R),
+            }
+g = Polynomial(g_coeffs, R = QMod_p)
+# coefficient of 'x' before modding out p(x):
+print("first term pre-modding:", g_coeffs[1])
+# coefficient of 'x' before modding out p(x):
+print("second term pre-modding:", g_coeffs[2])
+# coefficients of g(x) after converting the polynomials into their equivalence classes:
+print("polynomial post-modding:", g)
+```
+```plaintext
+first term pre-modding: 1 + 2x^3
+second term pre-modding: 4 + x + 3x^2 + x^3
+polynomial post-modding: [1 - 2.0x]x + [1.0]x^2
+```
+For any polynomial $f(x) \in F[x]$, if we consider $[f(x)]$ has an inverse in the field $F[x]/p(x)$, where $[f(x)]$ is the equivalence class of $f(x) \mod p(x)$. Since PyPoly considers any polynomial over $F[x]$ to be an an element of $F[x]/p(x)$ (after taking its remainder when divided by $p(x)$ ), we can take its inverse:
+```python
+a = Polynomial({0:1, 1:1}, R = p.R)
+a_inv = QMod_p.inv(a)
+print("a(x) =", a)
+print("a_inv(x) =", a_inv)
+print("a(x) * a_inv(x) =", QMod_p.mult(a,a_inv))
+```
+```plaintext
+a(x) = 1 + x
+a_inv(x) = 0.5 - 0.5x
+a(x) * a_inv(x) = 1.0
+```
+### Final Reminders
+The PyPolynomial module adds an implementation of polynomials that is simple, independent of other libraries, and capable of great versatility should you choose to define your own rings or make use of the extension fields supported by PyPolynomial.
